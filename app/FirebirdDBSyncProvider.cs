@@ -38,6 +38,8 @@ namespace SyncApplication
 				FbCommand insOrdersCmd = new FbCommand();
 				insOrdersCmd.CommandType = CommandType.StoredProcedure;
 				insOrdersCmd.CommandText = "sp_" + SyncUtils.SyncAdapterTables[i] + "_applyinsert";
+				if (SyncUtils.SyncAdapterTables[i] == "order_details")
+					insOrdersCmd.Parameters.Add("order_id", FbDbType.Integer);
 				insOrdersCmd.Parameters.Add(SyncUtils.SyncAdapterTablePrimaryKeys[i], FbDbType.Integer);
 				if (SyncUtils.SyncAdapterTables[i] == "orders")
 				{
@@ -47,7 +49,6 @@ namespace SyncApplication
 				{
 					insOrdersCmd.Parameters.Add("product", FbDbType.VarChar, 100);
 					insOrdersCmd.Parameters.Add("quantity", FbDbType.Integer);
-					insOrdersCmd.Parameters.Add("order_id", FbDbType.Integer);
 				}
 				insOrdersCmd.Parameters.Add(DbSyncSession.SyncRowCount, FbDbType.Integer).Direction = ParameterDirection.Output;
 				adapter.InsertCommand = insOrdersCmd;
@@ -217,29 +218,11 @@ namespace SyncApplication
         /// <returns></returns>
         protected override IDbTransaction CreateEnumerationTransaction()
         {
-            FbTransaction trans = (FbTransaction)this.Connection.BeginTransaction();            
+			FbTransaction trans = (FbTransaction)this.Connection.BeginTransaction();            
 			// TODO: Review this commented out section was required for Oracle, not sure about here for Firebird
             // new FbCommand("set transaction read only", (FbConnection)this.Connection, trans).ExecuteNonQuery();
             return trans; 
         }
-
-		public override void GetSyncBatchParameters(out uint batchSize, out Microsoft.Synchronization.SyncKnowledge knowledge)
-		{
-			RecreateSelectScope();
-			base.GetSyncBatchParameters(out batchSize, out knowledge);
-		}
-
-		public override Microsoft.Synchronization.ChangeBatch GetChangeBatch(uint batchSize, Microsoft.Synchronization.SyncKnowledge destinationKnowledge, out object changeDataRetriever)
-		{
-			RecreateSelectScope();
-			return base.GetChangeBatch(batchSize, destinationKnowledge, out changeDataRetriever);
-		}
-
-		public override void ProcessChangeBatch(Microsoft.Synchronization.ConflictResolutionPolicy resolutionPolicy, Microsoft.Synchronization.ChangeBatch sourceChanges, object changeDataRetriever, Microsoft.Synchronization.SyncCallbacks syncCallbacks, Microsoft.Synchronization.SyncSessionStatistics sessionStatistics)
-		{
-			RecreateSelectScope();
-			base.ProcessChangeBatch(resolutionPolicy, sourceChanges, changeDataRetriever, syncCallbacks, sessionStatistics);
-		}
 
 		private void RecreateSelectScope()
 		{
@@ -263,6 +246,13 @@ namespace SyncApplication
 			selReplicaInfoCmd.Parameters.Clear();
 			selReplicaInfoCmd.Parameters.Add(DbSyncSession.SyncScopeName, FbDbType.VarChar).Direction = ParameterDirection.Input;
 			SelectScopeInfoCommand = selReplicaInfoCmd;
+
+			selReplicaInfoCmd.Disposed += selReplicaInfoCmd_Disposed;
+		}
+
+		void selReplicaInfoCmd_Disposed(object sender, EventArgs e)
+		{
+			RecreateSelectScope();
 		}
     }
 }
