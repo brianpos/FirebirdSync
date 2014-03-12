@@ -112,20 +112,19 @@ namespace SyncApplication
 				insMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowCount, FbDbType.Integer).Direction = ParameterDirection.Output;
 				adapter.InsertMetadataCommand = insMetadataOrdersCmd;
 
-
-				// update row metadata command       
+				// update row metadata command
 				FbCommand updMetadataOrdersCmd = new FbCommand();
 				updMetadataOrdersCmd.CommandType = CommandType.StoredProcedure;
 				updMetadataOrdersCmd.CommandText = "sp_" + SyncUtils.SyncAdapterTables[i] + "_update_md";
 				updMetadataOrdersCmd.Parameters.Add(SyncUtils.SyncAdapterTablePrimaryKeys[i], FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncScopeLocalId, FbDbType.Integer);
-				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowTimestamp, FbDbType.Integer);
+				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowIsTombstone, FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncCreatePeerKey, FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncCreatePeerTimestamp, FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncUpdatePeerKey, FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncUpdatePeerTimestamp, FbDbType.Integer);
-				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowIsTombstone, FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncCheckConcurrency, FbDbType.Integer);
+				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowTimestamp, FbDbType.Integer);
 				updMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowCount, FbDbType.Integer).Direction = ParameterDirection.Output;
 				adapter.UpdateMetadataCommand = updMetadataOrdersCmd;
 
@@ -134,8 +133,8 @@ namespace SyncApplication
 				delMetadataOrdersCmd.CommandType = CommandType.StoredProcedure;
 				delMetadataOrdersCmd.CommandText = "sp_" + SyncUtils.SyncAdapterTables[i] + "_delete_md";
 				delMetadataOrdersCmd.Parameters.Add(SyncUtils.SyncAdapterTablePrimaryKeys[i], FbDbType.Integer);
-				delMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncCheckConcurrency, FbDbType.Integer);
 				delMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowTimestamp, FbDbType.Integer);
+				delMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncCheckConcurrency, FbDbType.Integer);
 				delMetadataOrdersCmd.Parameters.Add(DbSyncSession.SyncRowCount, FbDbType.Integer).Direction = ParameterDirection.Output;
 				adapter.DeleteMetadataCommand = delMetadataOrdersCmd;
 
@@ -203,10 +202,11 @@ namespace SyncApplication
 			updScopeCleanupInfoCmd.CommandText = "update  scope_info set " +
 											"scope_cleanup_timestamp = @" + DbSyncSession.SyncScopeCleanupTimestamp + " " +
 											"where scope_name = @" + DbSyncSession.SyncScopeName + " and " +
-											"(scope_cleanup_timestamp is null or scope_cleanup_timestamp <  @" + DbSyncSession.SyncScopeCleanupTimestamp + ");" +
+											"(scope_cleanup_timestamp is null or scope_cleanup_timestamp <  @" + DbSyncSession.SyncScopeCleanupTimestamp + "2);" +
 											"@" + DbSyncSession.SyncRowCount + " = ROW_COUNT;";
 			updScopeCleanupInfoCmd.Parameters.Add(DbSyncSession.SyncScopeCleanupTimestamp, FbDbType.Integer);
 			updScopeCleanupInfoCmd.Parameters.Add(DbSyncSession.SyncScopeName, FbDbType.VarChar, 100);
+			updScopeCleanupInfoCmd.Parameters.Add(DbSyncSession.SyncScopeCleanupTimestamp+"2", FbDbType.Integer);
 			updScopeCleanupInfoCmd.Parameters.Add(DbSyncSession.SyncRowCount, FbDbType.Integer).Direction = ParameterDirection.Output;
 			UpdateScopeCleanupTimestampCommand = updScopeCleanupInfoCmd;
 		}

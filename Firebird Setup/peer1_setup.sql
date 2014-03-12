@@ -97,7 +97,7 @@ RECREATE PROCEDURE sp_get_timestamp
 RETURNS ( SYNC_NEW_TIMESTAMP int )
 AS
 BEGIN
-  sync_new_timestamp = gen_id(sequence_newid, 1);
+  sync_new_timestamp = gen_id(sequence_timestamp, 1);
   suspend;
 END^
 
